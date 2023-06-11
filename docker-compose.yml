@@ -1,27 +1,33 @@
 version: '3'
 
 volumes:
-  pg_data:
-  static:
+  kitty_pg_data:
+  kitty_static:
+  kitty_media:
 
 services:
   db:
-    image: postgres:13
+    image: postgres:13.10
+    env_file: .env
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - kitty_pg_data:/var/lib/postgresql/data
   backend:
     build: ./backend/
     env_file: .env
+    volumes:
+      - kitty_static:/static
+      - kitty_media:/media
   frontend:
     env_file: .env
     build: ./frontend/
-    command: cp -r /app/build/. /static/
     volumes:
-      - static:/static
+      - kitty_static:/static
+    command: cp -r /app/build/. /static/
   gateway:
     build: ./nginx/
     env_file: .env
     ports:
       - 9000:80
     volumes:
-      - static:/static
+      - kitty_static:/static
+      - kitty_media:/media
