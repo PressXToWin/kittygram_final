@@ -1,0 +1,33 @@
+version: '3'
+
+volumes:
+  kitty_pg_data_production:
+  kitty_static:
+  kitty_media:
+
+services:
+  db:
+    image: postgres:13.10
+    env_file: .env
+    volumes:
+      - kitty_pg_data_production:/var/lib/postgresql/data
+  backend:
+    image: pressxtowin7/kittygram_backend
+    env_file: .env
+    volumes:
+      - kitty_static:/static
+      - kitty_media:/media
+  frontend:
+    image: pressxtowin7/kittygram_frontend
+    env_file: .env
+    command: cp -r /app/build/. /frontend_static/
+    volumes:
+      - kitty_static:/static
+  gateway:
+    image: pressxtowin7/kittygram_gateway
+    env_file: .env
+    volumes:
+      - kitty_static:/static
+      - kitty_media:/media
+    ports:
+      - 9000:80
