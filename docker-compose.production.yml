@@ -20,9 +20,9 @@ services:
   frontend:
     image: pressxtowin7/kittygram_frontend
     env_file: .env
-    command: cp -r /app/build/. /frontend_static/
     volumes:
       - kitty_static:/static
+    command: cp -r /app/build/. /frontend_static/
   gateway:
     image: pressxtowin7/kittygram_gateway
     env_file: .env
