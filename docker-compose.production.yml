@@ -22,7 +22,7 @@ services:
     env_file: .env
     volumes:
       - kitty_static:/static
-    command: cp -r /app/build/. /frontend_static/
+    command: cp -r /app/build/. /static/
   gateway:
     image: pressxtowin7/kittygram_gateway
     env_file: .env
