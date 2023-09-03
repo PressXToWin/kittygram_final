@@ -1,78 +1,64 @@
-#  Как работать с репозиторием финального задания
+# Kittygram — социальная сеть для обмена фотографиями котиков.
 
-## Что нужно сделать
+## О проекте
 
-Настроить запуск проекта Kittygram в контейнерах и CI/CD с помощью GitHub Actions
+Проект реализует веб сайт kittigram.
+Kittygram - это социальная сеть, для любителей кошек. Пользователи могут добавлять фотографии своих котов и смотреть на котов, добавленных другими пользователями.
+В проекте настроены Github Actions для автотестов и деплоя на сервер.
 
-## Как проверить работу с помощью автотестов
+### Деплой на сервере
 
-В корне репозитория создайте файл tests.yml со следующим содержимым:
-```yaml
-repo_owner: ваш_логин_на_гитхабе
-kittygram_domain: полная ссылка (https://доменное_имя) на ваш проект Kittygram
-taski_domain: полная ссылка (https://доменное_имя) на ваш проект Taski
-dockerhub_username: ваш_логин_на_докерхабе
-```
-
-Скопируйте содержимое файла `.github/workflows/main.yml` в файл `kittygram_workflow.yml` в корневой директории проекта.
-
-Для локального запуска тестов создайте виртуальное окружение, установите в него зависимости из backend/requirements.txt и запустите в корневой директории проекта `pytest`.
-
-## Чек-лист для проверки перед отправкой задания
-
-- Проект Taski доступен по доменному имени, указанному в `tests.yml`.
-- Проект Kittygram доступен по доменному имени, указанному в `tests.yml`.
-- Пуш в ветку main запускает тестирование и деплой Kittygram, а после успешного деплоя вам приходит сообщение в телеграм.
-- В корне проекта есть файл `kittygram_workflow.yml`.
-
-### Как запустить бэкенд:
-
-Клонировать репозиторий и перейти в него в командной строке:
-
-```
-git clone https://github.com/yandex-praktikum/kittygram_backend.git
-```
-
-```
-cd kittygram_backend
-```
-
-Cоздать и активировать виртуальное окружение:
-
-```
-python3 -m venv env
-```
-
-* Если у вас Linux/macOS
+1. Подключитесь к удаленному серверу
+2. Создайте на сервере директорию `kittygram`:
+3. Установите Docker Compose на сервер:
+4. Скопируйте файлы `docker-compose.production.yml` и `.env` в директорию `kittygram/` на сервере:
+5. Выполните миграции, соберите статические файлы бэкенда и скопируйте их в `/backend_static/static/`:
 
     ```
-    source env/bin/activate
+    sudo docker-compose -f /home/yc-user/kittygram/docker-compose.production.yml exec backend python manage.py migrate
+    sudo docker-compose -f /home/yc-user/kittygram/docker-compose.production.yml exec backend python manage.py collectstatic
+    sudo docker-compose -f /home/yc-user/kittygram/docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
     ```
 
-* Если у вас windows
+6. Откройте конфигурационный файл Nginx в редакторе nano:
 
     ```
-    source env/scripts/activate
+    sudo nano /etc/nginx/sites-enabled/default
     ```
 
-```
-python3 -m pip install --upgrade pip
-```
+7. Измените настройки `location` в секции `server`:
 
-Установить зависимости из файла requirements.txt:
+    ```
+    location / {
+        proxy_set_header Host $http_host;
+        proxy_pass http://127.0.0.1:9000;
+    }
+    ```
 
-```
-pip install -r requirements.txt
-```
+8. Перезагрузите конфиг Nginx:
 
-Выполнить миграции:
+    ```
+    sudo service nginx reload
+    ```
 
-```
-python3 manage.py migrate
-```
+### Настройка CI/CD
 
-Запустить проект:
+1. Файл workflow уже написан и находится в директории:
 
-```
-python3 manage.py runserver
-```
+    ```
+    kittygram/.github/workflows/main.yml
+    ```
+
+2. Для адаптации его к вашему серверу добавьте секреты в GitHub Actions:
+
+    ```
+    DOCKER_USERNAME                # имя пользователя в DockerHub
+    DOCKER_PASSWORD                # пароль пользователя в DockerHub
+    HOST                           # IP-адрес сервера
+    USER                           # имя пользователя
+    SSH_KEY                        # содержимое приватного SSH-ключа (cat ~/.ssh/id_rsa)
+    SSH_PASSPHRASE                 # пароль для SSH-ключа
+
+    TELEGRAM_TO                    # ID вашего телеграм-аккаунта
+    TELEGRAM_TOKEN                 # токен вашего бота
+    ```
